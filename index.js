@@ -1,48 +1,48 @@
-class House {
+class Student {
     constructor(name) {
         this.name = name;
-        this.rooms = [];
+        this.cars = [];
     }
 
-    addRoom(name, area) {
-        this.rooms.push(new Room(name, area));
-    }
-}
-
-class Room {
-    constructor(name, area) {
-        this.name = name;
-        this.area = area;
+    addCar(make, color) {
+        this.cars.push(new Car(make, color));
     }
 }
 
-class HouseService {
-    static url="https://ancient-taiga-31359.herokuapp.com/api/houses";
+class Car {
+    constructor(make, color) {
+        this.make = make;
+        this.color = color;
+    }
+}
 
-    static getAllHouses() {
+class StudentCarRecords {
+    static url="https://6375c99d7e93bcb006b9b0ae.mockapi.io/api/v1/studentCars";
+
+    static getAllStudentCarRecords() {
         return $.get(this.url);
     }
 
-    static getHouse(id) {
+    static getStudentCarRecords(id) {
         return $.get(this.url + `/${id}`);
     }
 
-    static createHouse(house) {
-        return $.post(this.url, house);
+    static createStudentCarRecord(name) {
+        return $.post(this.url, name);
     }
 
-    static updateHouse(house) {
+    static updateStudentCarRecords(name) {
         return $.ajax({
-            url: this.url + `/${house._id}`,
+            url: this.url + `/${name.id}`,
             dataType: 'json',
-            data: JSON.stringify(house),
+            data: JSON.stringify(name),
             contentType: 'application/json',
             type: 'PUT'
 
         });
     }
 
-    static deleteHouse(id) {
+    static deleteStudentCarRecords(id) {
         return $.ajax({
             url: this.url + `/${id}`,
             type: 'DELETE'
@@ -52,89 +52,91 @@ class HouseService {
 }
 
 class DOMManager {
-    static houses;
+    static StudentCarRecords;
 
-    static getAllHouses() {
-        HouseService.getAllHouses().then(houses => this.render(houses));
+    static getAllStudentCarRecords() {
+        StudentCarRecords.getAllStudentCarRecords().then(students => this.render(students));
     }
 
-    static createHouse(name) {
-        HouseService.createHouse(new House(name))
+    static createStudentCarRecord(name) {
+        StudentCarRecords.createStudentCarRecord(new Student(name))
             .then(() => {
-                return HouseService.getAllHouses();
+                return StudentCarRecords.getAllStudentCarRecords();
             })
-            .then((houses) => this.render(houses));
+            .then((students) => this.render(students));
     }
 
-    static deleteHouse(id) {
-        HouseService.deleteHouse(id)
+    static deleteStudentCarRecords(id) {
+        StudentCarRecords.deleteStudentCarRecords(id)
             .then(() => {
-                return HouseService.getAllHouses();
+                return StudentCarRecords.getAllStudentCarRecords();
             })
-            .then((houses) => this.render(houses));
+            .then((students) => this.render(students));
     }
 
-    static addRoom(id) {
-        for (let house of this.houses) {
-            if (house._id == id) {
-                house.rooms.push(new Room($(`#${house._id}-room-name`).val(), $(`#${house._id}-room-area`).val()));
-                HouseService.updateHouse(house) 
+    static addVehicle(id) {
+        for (let student of this.students) {
+            if (student.id == id) {
+                student.cars.push(new Car($(`#${student.id}-vehicle-make`).val(), $(`#${student.id}-vehicle-color`).val()));
+                StudentCarRecords.updateStudentCarRecords(student) 
                     .then(() => {
-                        return HouseService.getAllHouses();
+                        return StudentCarRecords.getAllStudentCarRecords();
                     })
-                    .then((houses) => this.render(houses));
+                    .then((students) => this.render(students));
             }
         }
     }
 
-    static deleteRoom(houseId, roomId) {
-        for (let house of this.houses) {
-            if (house._id == houseId) {
-                for (let room of house.rooms) {
-                    if (room._id == roomId) {
-                        house.rooms.splice(house.rooms.indexOf(room), 1);
-                        HouseService.updateHouse(house)
+    static deleteVehicle(studentId, carId) {
+        for (let student of this.students) {
+            if (student.id == studentId) {
+                for (let car of student.cars) {
+                    if (student.cars.indexOf(car) == carId) {
+                        student.cars.splice(student.cars.indexOf(car), 1);
+                        StudentCarRecords.updateStudentCarRecords(student)
                         .then(() => {
-                            return HouseService.getAllHouses();
+                            return StudentCarRecords.getAllStudentCarRecords();
                         })
-                        .then((houses) => this.render(houses));
+                        .then((student) => this.render(student));
                     }
                 }
             }
         }
     }
 
-    static render(houses) {
-        this.houses = houses;
+    static render(students) {
+        this.students = students;
         $('#app').empty();
-        for (let house of houses) {
+        for (let student of students) {
             $('#app').prepend(
-                `<div id="${house._id}" class="card">
+                `<div id="${student.id}" class="card">
                     <div class="card-header">
-                        <h2>${house.name}</h2>
-                        <button class="btn btn-danger" onClick="DOMManager.deleteHouse('${house._id}')">Delete</button>
+                        <h2>${student.name} <button class="btn btn-danger" onClick="DOMManager.deleteStudentCarRecords('${student.id}')">Delete</button></h2>
                     </div>
                     <div class="card-body">
                         <div class="card">
                             <div class="row">
                                 <div class="col-sm">
-                                <input type="text" id="${house._id}-room-name" class="form-control" placeholder="Room Name">
+                                <input type="text" id="${student.id}-vehicle-make" class="form-control" placeholder="Vehicle Make">
                                 </div>
                                 <div class="col-sm">
-                                <input type="text" id="${house._id}-room-area" class="form-control" placeholder="Room Area">
+                                <input type="text" id="${student.id}-vehicle-color" class="form-control" placeholder="Vehicle Color">
+                                </div>
+                                <div class="col-sm">
+                                <button id="${student.id}-new-car" onclick="DOMManager.addVehicle('${student.id}')" class="btn btn-primary form-control">Add</button>
                                 </div>
                             </div>
-                            <button id="${house._id}-new-room" onclick="DOMManager.addRoom('${house._id}')" class="btn btn-primary form-control">Add</button>
+                            
                         </div>
                     </div>
                 </div><br>`
             );
-            for (let room of house.rooms) {
-                $(`#${house._id}`).find('.card-body').append(
+            for (let car of student.cars) {
+                $(`#${student.id}`).find('.card-body').append(
                     `<p>
-                        <span id="name-${room._id}"><strong>Name: </strong> ${room.name}</span>
-                        <span id="name-${room._id}"><strong>Area: </strong> ${room.area}</span>
-                        <button class="btn btn-danger" onclick="DOMManager.deleteRoom('${house._id}', '${room._id}')">Delete Room</button>
+                        <span id="name-${car.make}"><strong>Make: </strong> ${car.make}</span>
+                        <span id="name-${car.color}"><strong>Color: </strong> ${car.color}</span>
+                        <button class="btn btn-danger" onclick="DOMManager.deleteVehicle('${student.id}', '${student.cars.indexOf(car)}')">Delete Vehicle</button>
                         `
                 );
             }
@@ -142,10 +144,10 @@ class DOMManager {
     }
 }
 
-$('#create-new-house').click(() => {
-    DOMManager.createHouse($('#new-house-name').val());
-    $('#new-house-name').val('');
+$('#create-new-student').click(() => {
+    DOMManager.createStudentCarRecord($('#new-student-name').val());
+    $('#new-student-name').val('');
 });
 
 
-DOMManager.getAllHouses();
+DOMManager.getAllStudentCarRecords();
